@@ -1,8 +1,12 @@
 #include <mbed.h>
 #include <Servo.h>
+#include <neopixel.h>
+//#include "neopixel.cpp"
 
 //Can use PB_0 for led 
-PwmOut led(PB_0);
+DigitalOut led(PB_0);
+DigitalOut pixelPin(PB_1);
+NeoPixel strip(PB_1, 15);
 
 
 //Create Servos
@@ -45,16 +49,28 @@ int main() {
                 automaticAero = msg.data[2];                //The data to know if the active aero is manual or auto
             }
 
-            if(msg.id == 2 && automaticAero == 1){          //Check button for manual aero
+            if(msg.id == 2 && automaticAero == 1){          //Check button for manual aero to either put it up or down
                 aeroOnManual = msg.data[1];                 //The button for manual aero will be stored in msg.data[x]
             }            
         }
+
 
         /**
          * Need this space to read CAN message to get mode for the car
          * and set the track conditions
         **/
 
+        //Code to turn red brake lights on if the pedal is pressed
+        if(brakePercent >0){
+            for(int i = 0; i < 15;i++){
+                strip.setPixelColor(i,255,0,0);
+            }
+            strip.show();
+        }
+        else{
+            strip.clear();
+        }
+        
 
         automaticAero =0;
         mode = 3;
