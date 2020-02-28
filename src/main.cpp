@@ -1,7 +1,11 @@
 #include <mbed.h>
 #include <Servo.h>
 #include <neopixel.h>
-//#include "neopixel.cpp"
+
+#define DEVICE_SERIAL 0
+#define low 0                         //Change this depending on how low to let the servo go
+#define high 1                        //Change this depending on how high to let the servo go
+
 
 //Can use PB_0 for led 
 DigitalOut led(PB_0);
@@ -9,11 +13,12 @@ DigitalOut pixelPin(PB_1);
 NeoPixel strip(PB_1, 15);
 
 
+
 //Create Servos
-Servo servo1A(PA_0);
-Servo servo2A(PA_1);
-Servo servo3A(PA_2);
-Servo servo4A(PA_3);
+Servo servo1A(PA_1);            //Pin 3
+Servo servo1B(PA_2);            //Pin 4
+Servo servo2A(PA_6);            //Pin 10
+Servo servo2B(PA_7);            //Pin 11
  
 //Create CAN message
 CAN can1(PA_11, PA_12);
@@ -42,7 +47,7 @@ int main() {
         if(can1.read(msg)){         //Gets a message from the can bus
             if(msg.id == 0){          //Change ID later 
                 brakePercent =(msg.data[0]/100.0); //The brake pressure will be stored in msg.data[x]
-                led.write(float(brakePercent/100.0)); //This is just testing to see if the code was working
+                //led.write(float(brakePercent)); //This is just testing to see if the code was working
             }
 
             if(msg.id == 1){                                //Check to see if you need to use button or if aero is automatic
@@ -61,7 +66,10 @@ int main() {
         **/
 
         //Code to turn red brake lights on if the pedal is pressed
-        if(brakePercent >0){
+        brakePercent = .2;
+        led.write(1);
+
+        if(brakePercent >= .3){
             for(int i = 0; i < 15;i++){
                 strip.setPixelColor(i,255,0,0);
             }
@@ -69,6 +77,7 @@ int main() {
         }
         else{
             strip.clear();
+            strip.show();
         }
         
 
@@ -97,11 +106,10 @@ int main() {
 }
 
 void moveAero(float x){                                        //Moves aero wing to given input
-    //x = 180 * (x/100);                                       //Converts the value so it is valid for the wing
     servo1A.write(x);
+    servo1B.write(1-x);
     servo2A.write(x);
-    servo3A.write(x);
-    servo4A.write(x);
+    servo2B.write(1-x);
 }
 
 void setTrackCondition(int x){                                //Sets track condition so you can change limitations 
